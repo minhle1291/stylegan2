@@ -12,12 +12,13 @@ import dnnlib.tflib as tflib
 import re
 import sys
 import random
+import uuid
 
 import pretrained_networks
 
 #----------------------------------------------------------------------------
 
-def generate_images(network_pkl, seeds, truncation_psi, verbose=True):
+def generate_images(network_pkl, seeds, truncation_psi, verbose=0):
     print('Loading networks from "%s"...' % network_pkl)
     _G, _D, Gs = pretrained_networks.load_networks(network_pkl)
     noise_vars = [var for name, var in Gs.components.synthesis.vars.items() if name.startswith('noise')]
@@ -29,12 +30,13 @@ def generate_images(network_pkl, seeds, truncation_psi, verbose=True):
         Gs_kwargs.truncation_psi = truncation_psi
 
     for seed_idx, seed in enumerate(seeds):
-        if verbose: print('Generating image for seed %d (%d/%d) ...' % (seed, seed_idx, len(seeds)))
+        if verbose==1: print('Generating image for seed %d (%d/%d) ...' % (seed, seed_idx, len(seeds)))
         rnd = np.random.RandomState(random.randint(1,2**32-1))
         z = rnd.randn(1, *Gs.input_shape[1:]) # [minibatch, component]
         tflib.set_vars({var: rnd.randn(*var.shape.as_list()) for var in noise_vars}) # [height, width]
         images = Gs.run(z, None, **Gs_kwargs) # [minibatch, height, width, channel]
-        PIL.Image.fromarray(images[0], 'RGB').save(dnnlib.make_run_dir_path('seed%04d.jpg' % seed))
+        #PIL.Image.fromarray(images[0], 'RGB').save(dnnlib.make_run_dir_path('seed%04d.jpg' % seed))
+        PIL.Image.fromarray(images[0], 'RGB').save(dnnlib.make_run_dir_path('%04d.jpg' % uuid.uuid4()))
 
 #----------------------------------------------------------------------------
 

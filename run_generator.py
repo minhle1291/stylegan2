@@ -11,6 +11,7 @@ import dnnlib
 import dnnlib.tflib as tflib
 import re
 import sys
+import random
 
 import pretrained_networks
 
@@ -29,7 +30,7 @@ def generate_images(network_pkl, seeds, truncation_psi):
 
     for seed_idx, seed in enumerate(seeds):
         print('Generating image for seed %d (%d/%d) ...' % (seed, seed_idx, len(seeds)))
-        rnd = np.random.RandomState(seed)
+        rnd = np.random.RandomState(random.randint(1,2**32-1))
         z = rnd.randn(1, *Gs.input_shape[1:]) # [minibatch, component]
         tflib.set_vars({var: rnd.randn(*var.shape.as_list()) for var in noise_vars}) # [height, width]
         images = Gs.run(z, None, **Gs_kwargs) # [minibatch, height, width, channel]
